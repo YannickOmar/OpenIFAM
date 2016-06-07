@@ -30,9 +30,31 @@ nu = 0.3
 *ELEMENT, TYPE=C3D8, ELSET=EL_BLK2
 2, 201, 202, 203, 204, 211, 212, 213, 214
 ** Material
-*SOLID SECTION, ELSET=EL_BLK1, MATERIAL=mat_blk1
+*SOLID SECTION, ELSET=EL_BLK1, MATERIAL=NEOHOOK1
 *HYPERELASTIC, NEO HOOKE
 1/(4*(1+<nu>)), 2/(1-2*<nu>), 1
+*SOLID SECTION, ELSET=EL_BLK2, MATERIAL=NEOHOOK2
+*HYPERELASTIC, NEO HOOKE
+1/(4*(1+<nu>)), 2/(1-2*<nu>), 1
+** History data
+*STEP
+*STATIC
+*BOUNDARY
+101, PINNED
+102, PINNED
+103, PINNED
+104, PINNED
+*CLOAD
+211, 3, 1
+212, 3, 1
+213, 3, 1
+214, 3, 1
+*NODE PRINT
+U, 
+RF,
+*EL PRINT
+S,
+*END STEP
 
 *** http://bobcat.nus.edu.sg:2080/v6.13/books/key/default.htm
 *** http://bobcat.nus.edu.sg:2080/v6.13/index.html
