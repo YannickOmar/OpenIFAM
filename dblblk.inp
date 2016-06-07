@@ -1,0 +1,41 @@
+*HEADING
+Double blocks - 1st
+SI-Units
+*PREPRINT, ECHO=YES, MODEL=YES, HISTORY=YES
+** define model
+*PARAMETER
+width = 2
+height = 4
+nu = 0.3
+*NDOE, NSET=BLK1
+101, -0.5*<width>, -0.5*<width>, -<height>
+102, -0.5*<width>, 0.5*<width>, -<height>
+103, 0.5*<width>, -0.5*<width>, -<height>
+104, 0.5*<width>, 0.5*<width>, -<height>
+111, -0.5*<width>, -0.5*<width>, 0
+112, -0.5*<width>, 0.5*<width>, 0
+113, 0.5*<width>, -0.5*<width>, 0
+114, 0.5*<width>, 0.5*<width>,0
+*NODE, NSET=BLK2
+201, -0.5*<width>, -0.5*<width>, 0
+202, -0.5*<width>, 0.5*<width>, 0
+203, 0.5*<width>, -0.5*<width>, 0
+204, 0.5*<width>, 0.5*<width>, 0
+211, -0.5*<width>, -0.5*<width>, <height>
+212, -0.5*<width>, 0.5*<width>, <height>
+213, 0.5*<width>, -0.5*<width>, <height>
+214, 0.5*<width>, 0.5*<width>,<height>
+*ELEMENT, TYPE=C3D8, ELSET=EL_BLK1
+1, 101, 102, 103, 104, 111, 112, 113, 114
+*ELEMENT, TYPE=C3D8, ELSET=EL_BLK2
+2, 201, 202, 203, 204, 211, 212, 213, 214
+** Material
+*SOLID SECTION, ELSET=EL_BLK1, MATERIAL=mat_blk1
+*HYPERELASTIC, NEO HOOKE
+1/(4*(1+<nu>)), 2/(1-2*<nu>), 1
+
+*** http://bobcat.nus.edu.sg:2080/v6.13/books/key/default.htm
+*** http://bobcat.nus.edu.sg:2080/v6.13/index.html
+*** http://abaqusdoc.ucalgary.ca/books/exa/default.htm?startat=book01.html#exa
+*** http://abaqusdoc.ucalgary.ca/books/popups/usb-pre.html
+*** https://www.researchgate.net/file.PostFileLoader.html?id=54f77c2aef9713330d8b4626&assetKey=AS%3A273722961793024%401442272048382
