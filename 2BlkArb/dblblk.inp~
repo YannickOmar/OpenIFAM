@@ -3,72 +3,117 @@ Two opposing blocks of two hyperelastic materials - currently rigidly connected
 SI-Units
 *PREPRINT, ECHO=YES, MODEL=YES, HISTORY=YES
 *PARAMETER
-						** width of both blocks
+** width of both blocks
 width = 2
-						** depth of both blocks
+** depth of both blocks
 depth = 2	
-						** height of block 1
+** height of block 1
 height_blk1 = 4	
-						** height of block 2
+** height of block 2
 height_blk2 = 4	
 ** Material Parameters for Neo Hookean material
-						** Poisson's ratio
+** Poisson's ratio
 nu = 0.49
-						** Young's modulus
-E0 = .1E9 
+** Young's modulus
+E0 = 0.1E9 
 ** Meshing parameters
-						** number of elements in width
+** number of elements in width
 nel_width = 2
-						** number of elements in depth	
+** number of elements in depth	
 nel_depth = 2		
-						** number of elements in height of block 1
+** number of elements in height of block 1
 nel_height_blk1 = 2
-						** number of elements in height of block 2
+** number of elements in height of block 2
 nel_height_blk2 = 2
-						** element type, assume 8-noded brick 
-el_type = C3D8H
+** number of elements per layer
+nel_layer = nel_width * nel_depth
+** node increment width (I use the number of nodes per element - just needs to be consistent)
+ninc_width = 8
+** node increment depth
+ninc_depth = ninc_width * nel_width
+** node increment height
+ninc_height = ninc_width * nel_layer
+** element type, assume 8-noded brick 
+** el_type = C3D8H
 ** loading
-						** reference load
+** reference load
 fmax = 1E2
 ** dependent
 ** block position (can be modified to be dependent on block sizes)
-						** block 1, x position of reference node 
-blk1_x = 0
-						** block 1, y position of reference node 
-blk1_y = 0
-						** block 1, z position of reference node 
-blk1_z = 0 
-						** block 2, x position of reference node 
-blk2_x = 0
-						** block 2, y position of reference node 
-blk2_y = 0
-						** block 2, z position of reference node 
-blk2_z = height_blk
+** block 1, x position of front left bottom node
+blk1_x_flb = 0
+** block 1, y position of front left bottom node
+blk1_y_flb = 0
+** block 1, z position of front left bottom node
+blk1_z_flb = 0 
+** block 1, x position of back right top node
+blk1_x_brt = blk1_x_flb + width
+** block 1, y position of back right top node
+blk1_y_brt = blk1_y_flb + depth
+** block 1, z position of back right top node
+blk1_z_brt = blk1_z_flb + height 
+**
+** block 2, x position of front left bottom node
+blk2_x_flb = 0
+** block 2, y position of front left bottom node
+blk2_y_flb = 0
+** block 2, z position of front left bottom node
+blk2_z_flb = height_blk1
+** block 2, x position of back right top node
+blk2_x_brt = blk2_x_flb + width
+** block 2, y position of back right top node
+blk2_y_brt = blk2_y_flb + depth
+** block 2, z position of back right top node
+blk2_z_brt = blk2_z_flb + height 
+**
+** some node numbers
+**
+nnum_flb_blk1 = 1
+nnum_frb_blk1 = nel_width
+nnum_brb_blk1 = nel_width*nel_depth
+nnum_blb_blk1 = (nel_depth-1)*nel_width + 1
+nnum_flt_blk1 = nel_width*nel_depth*(nel_height_blk1) + 1
+nnum_frt_blk1 = nel_width*nel_depth + nel_width
+nnum_brt_blk1 = nel_width*nel_depth
+nnum_blt_blk1 = (nel_depth-1)*nel_width + 1
+**
 ** element sizes
-						** element length in x-direction
+**
+** element length in x-direction
 blk_el_x = width/nel_width
-			  			** element length in y-direction
+** element length in y-direction
 blk_el_y = depth/nel_width
-						** block 1, element length in z-direction
+** block 1, element length in z-direction
 blk1_el_z = height_blk1/nel_width
-				  		** block 2, element length in z-direction
+** block 2, element length in z-direction
 blk2_el_z = height_blk2/nel_width
 **
 ** some nodal coordinates for master
-mst1_x = blk1_x + blk_el_x
-mst1_y = blk1_y + blk_el_y
-mst1_z = blk1_z + blk1_el_z
-mst2_x = blk2_x + blk_el_x
-mst2_y = blk2_y + blk_el_y
-mst2_z = blk2_z + blk2_el_z
+mst1_x = blk1_x_flb + blk_el_x
+mst1_y = blk1_y_flb + blk_el_y
+mst1_z = blk1_z_flb + blk1_el_z
+mst2_x = blk2_x_flb + blk_el_x
+mst2_y = blk2_y_flb + blk_el_y
+mst2_z = blk2_z_flb + blk2_el_z
 ** Material
-						** first parameter for Neo-Hookean material			  
+** first parameter for Neo-Hookean material			  
 C10 = 1/(4*(1+nu))
-		    				** second parameter for Neo-Hookean material
+** second parameter for Neo-Hookean material
 D1 = 2/3 * 1/(1-2*nu)
 **
-** Create two master elements in each blocks
-*NODE, , NSET=master1
+** Generate boundary nodes
+*NODE, NSET=boundary_blk1
+1, <blk1_x_flb>, <blk1_y_flb>, <blk1_z_flb>
+2, <blk1_x_flb>, <blk1_y_brt>, <blk1_z_flb>
+3, <blk1_x_flb>, <blk1_y_brt>, <blk1_z_brt>
+4, <blk1_x_flb>, <blk1_y_flb>, <blk1_z_brt>
+5, <blk1_x_brt>, <blk1_y_flb>, <blk1_z_flb>
+6, <blk1_x_brt>, <blk1_y_brt>, <blk1_z_flb>
+7, <blk1_x_brt>, <blk1_y_brt>, <blk1_z_brt>
+8, <blk1_x_brt>, <blk1_y_flb>, <blk1_z_brt>
+**
+** Create two master elements in each block
+*NODE, NSET=master1
 1001, <blk1_x>, <blk1_y>, <blk1_y>
 1002, <mst1_x>, <blk1_y>, <blk1_y>
 1003, <mst1_x>, <mst1_y>, <blk1_y>
@@ -87,8 +132,8 @@ D1 = 2/3 * 1/(1-2*nu)
 2007, <mst2_x>, <mst2_y>, <mst2_z>
 2008, <blk2_x>, <mst2_y>, <mst2_z>
 *Element, TYPE=C3D8H
-1001, 1001. 1002, 1003, 1004, 1005, 1006, 1007, 1008
-2001, 2001. 2002, 2003, 2004, 2005, 2006, 2007, 2008
+1001, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008
+2001, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 *ELGEN, ELSET=EL_BLK1
-1001, nel_width, 1, 1, nel_depth,1,1, nel_height_blk1,1,1
-2001, nel_width, 1, 1, nel_depth,1,1, nel_height_blk2,1,1
+1001, <nel_width>, <ninc_width>, 1, <nel_depth>,<ninc_depth>,<nel_width>, <nel_height_blk1>,<ninc_height>,<nel_layer>
+2001, <nel_width>, <ninc_width>, 1, <nel_depth>,<ninc_depth>,<nel_width>, <nel_height_blk2>,<ninc_height>,<nel_layer>
