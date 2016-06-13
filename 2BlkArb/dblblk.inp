@@ -1,7 +1,7 @@
 *HEADING
 Two opposing blocks of two hyperelastic materials - currently rigidly connected
 assumption: no more than 5000 nodes per block
-*PREPRINT, ECHO=YES, MODEL=YES, HISTORY=YES
+*PREPRINT, ECHO=YES, MODEL=YES, HISTORY=YES, PARVALUES = YES, PARSUBSTITUTION=YES
 *PARAMETER
 ** width of both blocks
 width = 2
@@ -51,7 +51,7 @@ blk1_x_brt = blk1_x_flb + width
 ** block 1, y position of back right top node
 blk1_y_brt = blk1_y_flb + depth
 ** block 1, z position of back right top node
-blk1_z_brt = blk1_z_flb + height 
+blk1_z_brt = blk1_z_flb + height_blk1 
 **
 ** block 2, x position of front left bottom node
 blk2_x_flb = 0
@@ -64,29 +64,40 @@ blk2_x_brt = blk2_x_flb + width
 ** block 2, y position of back right top node
 blk2_y_brt = blk2_y_flb + depth
 ** block 2, z position of back right top node
-blk2_z_brt = blk2_z_flb + height 
+blk2_z_brt = blk2_z_flb + height_blk2 
 **
 ** some node numbers
 **
+nel_widthp1 = nel_width + 1
+**
 nnum_flb_blk1 = 1
-nnum_frb_blk1 = nel_width
-nnum_brb_blk1 = nel_width*nel_depth
-nnum_blb_blk1 = (nel_depth-1)*nel_width + 1
-nnum_flt_blk1 = nel_width*nel_depth*(nel_height_blk1-1) + 1
-nnum_frt_blk1 = nel_width*nel_depth*(nel_height_blk1-1) + nel_width
-nnum_brt_blk1 = nel_width*nel_depth*nel_height_blk1
-nnum_blt_blk1 = nel_width*nel_depth*(nel_height_blk1-1) + (nel_depth-1)*nel_width + 1
+nnum_frb_blk1 = nel_width+1
+nnum_brb_blk1 = (nel_width+1)*(nel_depth+1)
+nnum_blb_blk1 = (nel_depth-1+1)*(nel_width+1) + 1
+nnum_flt_blk1 = (nel_width+1)*(nel_depth+1)*(nel_height_blk1-1+1) + 1
+nnum_frt_blk1 = nnum_flt_blk1 + nel_width 
+nnum_brt_blk1 = nnum_flt_blk1 + (nel_width+1)*(nel_depth+1) - 1
+nnum_blt_blk1 = nnum_flt_blk1 + (nel_depth-1+1)*(nel_width+1) 
 **
 nnum_blk2_start = 5000
 nnum_flb_blk2 = nnum_blk2_start + 1
-nnum_frb_blk2 = nnum_blk2_start + nel_width
-nnum_brb_blk2 = nnum_blk2_start + nel_width*nel_depth
-nnum_blb_blk2 = nnum_blk2_start + (nel_depth-1)*nel_width + 1
-nnum_flt_blk2 = nnum_blk2_start + nel_width*nel_depth*(nel_height_blk1-1) + 1
-nnum_frt_blk2 = nnum_blk2_start + nel_width*nel_depth*(nel_height_blk1-1) + nel_width
-nnum_brt_blk2 = nnum_blk2_start + nel_width*nel_depth*nel_height_blk1
-nnum_blt_blk2 = nnum_blk2_start + nel_width*nel_depth*(nel_height_blk1-1) + (nel_depth-1)*nel_width + 1
+nnum_frb_blk2 = nnum_blk2_start + nel_width+1
+nnum_brb_blk2 = nnum_blk2_start + (nel_width+1)*(nel_depth+1)
+nnum_blb_blk2 = nnum_blk2_start + (nel_depth-1+1)*(nel_width+1) + 1
+nnum_flt_blk2 = nnum_blk2_start + (nel_width+1)*(nel_depth+1)*(nel_height_blk2-1+1) + 1
+nnum_frt_blk2 = nnum_flt_blk2 + nel_width 
+nnum_brt_blk2 = nnum_flt_blk2 + (nel_width+1)*(nel_depth+1) - 1
+nnum_blt_blk2 = nnum_flt_blk2 + (nel_depth-1+1)*(nel_width+1) 
 **
+** node number of master elements for elgen
+nnum_m1_blk1 = nnum_flb_blk1
+nnum_m2 = nnum_flb_blk1 + 1
+nnum_m3 = nel_width + 1 + 1 + 1
+nnum_m4 = nel_width + 1 + 1
+nnum_m5 = (nel_width + 1)*(nel_depth + 1) + 1
+nnum_m6 = nnum_m5 + 1
+nnum_m7 = nnum_m5 + (nel_width + 1) + 1
+nnum_m8 = nnum_m5 + (nel_width + 1) 
 ** element sizes
 **
 ** element length in x-direction
@@ -98,52 +109,39 @@ blk1_el_z = height_blk1/nel_width
 ** block 2, element length in z-direction
 blk2_el_z = height_blk2/nel_width
 **
-** some nodal coordinates for master
-mst1_x = blk1_x_flb + blk_el_x
-mst1_y = blk1_y_flb + blk_el_y
-mst1_z = blk1_z_flb + blk1_el_z
-mst2_x = blk2_x_flb + blk_el_x
-mst2_y = blk2_y_flb + blk_el_y
-mst2_z = blk2_z_flb + blk2_el_z
 ** Material
 ** first parameter for Neo-Hookean material			  
 C10 = 1/(4*(1+nu))
 ** second parameter for Neo-Hookean material
 D1 = 2/3 * 1/(1-2*nu)
 **
-** Generate boundary nodes
-*NODE, NSET=boundary_blk1
-1, <blk1_x_flb>, <blk1_y_flb>, <blk1_z_flb>
-2, <blk1_x_flb>, <blk1_y_brt>, <blk1_z_flb>
-3, <blk1_x_flb>, <blk1_y_brt>, <blk1_z_brt>
-4, <blk1_x_flb>, <blk1_y_flb>, <blk1_z_brt>
-5, <blk1_x_brt>, <blk1_y_flb>, <blk1_z_flb>
-6, <blk1_x_brt>, <blk1_y_brt>, <blk1_z_flb>
-7, <blk1_x_brt>, <blk1_y_brt>, <blk1_z_brt>
-8, <blk1_x_brt>, <blk1_y_flb>, <blk1_z_brt>
+** Generate nodes
+*NODE
+<nnum_flb_blk1>, <blk1_x_flb>,  <blk1_y_flb>, <blk1_z_flb> 
+<nnum_flt_blk1>, <blk1_x_flb>,  <blk1_y_flb>, <blk1_z_brt>
+<nnum_blb_blk1>, <blk1_x_flb>,  <blk1_y_brt>, <blk1_z_flb>
+<nnum_blt_blk1>, <blk1_x_flb>,  <blk1_y_brt>, <blk1_z_brt>
+<nnum_frb_blk1>, <blk1_x_brt>,  <blk1_y_flb>, <blk1_z_flb> 
+<nnum_frt_blk1>, <blk1_x_brt>,  <blk1_y_flb>, <blk1_z_brt>
+<nnum_brb_blk1>, <blk1_x_brt>,  <blk1_y_brt>, <blk1_z_flb>
+<nnum_brt_blk1>, <blk1_x_brt>,  <blk1_y_brt>, <blk1_z_brt>
+*NGEN, NSET=fl_edge_blk1
+<nnum_flb_blk1>, <nnum_flt_blk1>, <nnum_brb_blk1>
+*NGEN, NSET=bl_edge_blk1
+<nnum_blb_blk1>, <nnum_blt_blk1>, <nnum_brb_blk1>
+*NFILL, NSET=l_face
+fl_edge_blk1, bl_edge_blk1, <nel_depth>, <nel_widthp1>
 **
-** Create two master elements in each block
-*NODE, NSET=master1
-1001, <blk1_x>, <blk1_y>, <blk1_y>
-1002, <mst1_x>, <blk1_y>, <blk1_y>
-1003, <mst1_x>, <mst1_y>, <blk1_y>
-1004, <blk1_x>, <mst1_y>, <blk1_y>
-1005, <blk1_x>, <blk1_y>, <mst1_z>
-1006, <mst1_x>, <blk1_y>, <mst1_z>
-1007, <mst1_x>, <mst1_y>, <mst1_z>
-1008, <blk1_x>, <mst1_y>, <mst1_z>
-*NODE, , NSET=master2
-2001, <blk2_x>, <blk2_y>, <blk2_y>
-2002, <mst2_x>, <blk2_y>, <blk2_y>
-2003, <mst2_x>, <mst2_y>, <blk2_y>
-2004, <blk2_x>, <mst2_y>, <blk2_y>
-2005, <blk2_x>, <blk2_y>, <mst2_z>
-2006, <mst2_x>, <blk2_y>, <mst2_z>
-2007, <mst2_x>, <mst2_y>, <mst2_z>
-2008, <blk2_x>, <mst2_y>, <mst2_z>
+*NGEN, NSET=fr_edge_blk1
+<nnum_frb_blk1>, <nnum_frt_blk1>, <nnum_brb_blk1>
+*NGEN, NSET=br_edge_blk1
+<nnum_brb_blk1>, <nnum_brt_blk1>, <nnum_brb_blk1>
+*NFILL, NSET=r_face
+fr_edge_blk1, br_edge_blk1, <nel_depth>, <nel_widthp1>
+**
+*NFILL, NSET=NBLK1
+l_face, r_face, <nel_width>
+**
+** Generate Elements
 *Element, TYPE=C3D8H
-1001, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008
-2001, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-*ELGEN, ELSET=EL_BLK1
-1001, <nel_width>, <ninc_width>, 1, <nel_depth>,<ninc_depth>,<nel_width>, <nel_height_blk1>,<ninc_height>,<nel_layer>
-2001, <nel_width>, <ninc_width>, 1, <nel_depth>,<ninc_depth>,<nel_width>, <nel_height_blk2>,<ninc_height>,<nel_layer>
+1, 
