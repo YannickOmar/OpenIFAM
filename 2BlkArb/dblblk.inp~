@@ -1,7 +1,31 @@
+** Yannick Omar
+** DRAFT VERSION
+**
+** Description:
+** Two blocks of same width (x-direction) and depth (y-direction) with potentially different heights (z-direction).
+**		z	
+**		|
+**		|____ x
+**	       /
+**	      / y
+** Naming conventions:
+** flt: 	front, left, top, referring to nodes 
+** 		(1st position: front(f)/back(b), 2nd pos.: left(l)/right(r), 3rd pos.: bottom(b)/top(t)
+**		e.g. brb: bottom, right, back
+** blk1		block 1 (lower one)
+** blk2 	block 2 (upper one)
+** 
+** TODO:
+** - Plasticity
+** - different elastic material models
+** - CZE's
+** 
+**
 *HEADING
 Two opposing blocks of two hyperelastic materials - currently rigidly connected
 assumption: no more than 5000 nodes per block
 *PREPRINT, ECHO=YES, MODEL=YES, HISTORY=YES, PARVALUES = YES, PARSUBSTITUTION=YES
+**
 *PARAMETER
 ** width of both blocks
 width = 2
@@ -11,18 +35,26 @@ depth = 2
 height_blk1 = 4	
 ** height of block 2
 height_blk2 = 4	
-** Material Parameters for Neo Hookean material
-** Poisson's ratio
-nu = 0.49
-** Young's modulus
-E0 = 0.1E9 
-** Meshing parameters
+**
+** MATERIAL PARAMETERS for Neo Hookean material
+**
+** Poisson's ratio block 1
+nu_blk1 = 0.49
+** Young's modulus block 1
+E0_blk1 = 0.1E9 
+** Poisson's ratio block 2
+nu_blk2 = 0.49
+** Young's modulus block 2
+E0_blk2 = 0.1E9 
+**
+** MESHING PARAMETERS
+**
 ** number of elements in width
-nel_width = 2
+nel_width = 5
 ** number of elements in depth	
-nel_depth = 2		
+nel_depth = 7		
 ** number of elements in height of block 1
-nel_height_blk1 = 2
+nel_height_blk1 = 10
 ** number of elements in height of block 2
 nel_height_blk2 = 2
 ** number of elements per layer
@@ -33,13 +65,11 @@ ninc_width = 8
 ninc_depth = ninc_width * nel_width
 ** node increment height
 ninc_height = ninc_width * nel_layer
-** element type, assume 8-noded brick 
-** el_type = C3D8H
-** loading
-** reference load
-fmax = 1E2
-** dependent
+**
+** DEPENDENT PARAMETERS, do not change
+**
 ** block position (can be modified to be dependent on block sizes)
+**
 ** block 1, x position of front left bottom node
 blk1_x_flb = 0
 ** block 1, y position of front left bottom node
@@ -52,6 +82,7 @@ blk1_x_brt = blk1_x_flb + width
 blk1_y_brt = blk1_y_flb + depth
 ** block 1, z position of back right top node
 blk1_z_brt = blk1_z_flb + height_blk1 
+**
 **
 ** block 2, x position of front left bottom node
 blk2_x_flb = 0
@@ -66,10 +97,12 @@ blk2_y_brt = blk2_y_flb + depth
 ** block 2, z position of back right top node
 blk2_z_brt = blk2_z_flb + height_blk2 
 **
-** some node numbers
+** some node numbers that are required later
 **
 nel_widthp1 = nel_width + 1
+nnodes_layer = (nel_width + 1)*(nel_depth + 1)
 **
+** node number for block 1, see naming conventions on top
 nnum_flb_blk1 = 1
 nnum_frb_blk1 = nel_width+1
 nnum_brb_blk1 = (nel_width+1)*(nel_depth+1)
@@ -79,6 +112,8 @@ nnum_frt_blk1 = nnum_flt_blk1 + nel_width
 nnum_brt_blk1 = nnum_flt_blk1 + (nel_width+1)*(nel_depth+1) - 1
 nnum_blt_blk1 = nnum_flt_blk1 + (nel_depth-1+1)*(nel_width+1) 
 **
+** node number for block 2, see naming conventions on top
+** zero'th node of block 2
 nnum_blk2_start = 5000
 nnum_flb_blk2 = nnum_blk2_start + 1
 nnum_frb_blk2 = nnum_blk2_start + nel_width+1
@@ -88,17 +123,37 @@ nnum_flt_blk2 = nnum_blk2_start + (nel_width+1)*(nel_depth+1)*(nel_height_blk2-1
 nnum_frt_blk2 = nnum_flt_blk2 + nel_width 
 nnum_brt_blk2 = nnum_flt_blk2 + (nel_width+1)*(nel_depth+1) - 1
 nnum_blt_blk2 = nnum_flt_blk2 + (nel_depth-1+1)*(nel_width+1) 
+** 
+** some element numbers
+** element starting number block 2
+elnum_blk2_start = 5001
+** element number to extract top layer of block 2 later
+elnum_t_layer_flt_blk2 = elnum_blk2_start + nel_layer * (nel_height_blk2-1) 
+elnum_t_layer_brt_blk2 = elnum_blk2_start + nel_layer * nel_height_blk2 - 1
 **
-** node number of master elements for elgen
-nnum_m1 = nnum_flb_blk1
-nnum_m2 = nnum_flb_blk1 + 1
-nnum_m3 = nel_width + 1 + 1 + 1
-nnum_m4 = nel_width + 1 + 1
-nnum_m5 = (nel_width + 1)*(nel_depth + 1) + 1
-nnum_m6 = nnum_m5 + 1
-nnum_m7 = nnum_m5 + (nel_width + 1) + 1
-nnum_m8 = nnum_m5 + (nel_width + 1) 
-** element sizes
+** node number of master element for elgen - block 1
+**
+nnum_m1_blk1 = nnum_flb_blk1
+nnum_m2_blk1 = nnum_flb_blk1 + 1
+nnum_m3_blk1 = nel_width + 1 + 1 + 1
+nnum_m4_blk1 = nel_width + 1 + 1
+nnum_m5_blk1 = (nel_width + 1)*(nel_depth + 1) + 1
+nnum_m6_blk1 = nnum_m5_blk1 + 1
+nnum_m7_blk1 = nnum_m5_blk1 + (nel_width + 1) + 1
+nnum_m8_blk1 = nnum_m5_blk1 + (nel_width + 1) 
+**
+** node number of master element for elgen - block 2
+**
+nnum_m1_blk2 = nnum_flb_blk2
+nnum_m2_blk2 = nnum_flb_blk2 + 1
+nnum_m3_blk2 = nnum_flb_blk2 + nel_width + 1 + 1 
+nnum_m4_blk2 = nnum_flb_blk2 + nel_width + 1
+nnum_m5_blk2 = nnum_flb_blk2 + (nel_width + 1)*(nel_depth + 1) 
+nnum_m6_blk2 = nnum_m5_blk2 + 1
+nnum_m7_blk2 = nnum_m5_blk2 + (nel_width + 1) + 1
+nnum_m8_blk2 = nnum_m5_blk2 + (nel_width + 1) 
+**
+** ELEMENT SIZES
 **
 ** element length in x-direction
 blk_el_x = width/nel_width
@@ -109,13 +164,22 @@ blk1_el_z = height_blk1/nel_width
 ** block 2, element length in z-direction
 blk2_el_z = height_blk2/nel_width
 **
-** Material
-** first parameter for Neo-Hookean material			  
-C10 = 1/(4*(1+nu))
-** second parameter for Neo-Hookean material
-D1 = 2/3 * 1/(1-2*nu)
+** (DEPENDENT) MATERIAL CONSTANTS
 **
-** Generate nodes
+** first parameter for Neo-Hookean material - Blk1			  
+C10_blk1 = E0_blk1/(4*(1+nu_blk1))
+** second parameter for Neo-Hookean material - Blk1
+D1_blk1 = 2/3 * (1-2*nu_blk1)/E0_blk1
+** first parameter for Neo-Hookean material - Blk2			  
+C10_blk2 = E0_blk2/(4*(1+nu_blk2))
+** second parameter for Neo-Hookean material - Blk2
+D1_blk2 = 2/3 * (1-2*nu_blk2)/E0_blk2
+**
+** END PARAMETER DEFINITION
+**
+** MESH for block 1
+**
+** Generate nodes on the corners of block 1
 *NODE
 <nnum_flb_blk1>, <blk1_x_flb>,  <blk1_y_flb>, <blk1_z_flb> 
 <nnum_flt_blk1>, <blk1_x_flb>,  <blk1_y_flb>, <blk1_z_brt>
@@ -125,23 +189,150 @@ D1 = 2/3 * 1/(1-2*nu)
 <nnum_frt_blk1>, <blk1_x_brt>,  <blk1_y_flb>, <blk1_z_brt>
 <nnum_brb_blk1>, <blk1_x_brt>,  <blk1_y_brt>, <blk1_z_flb>
 <nnum_brt_blk1>, <blk1_x_brt>,  <blk1_y_brt>, <blk1_z_brt>
+** 
+** Generate nodes on front left edge of block 1
 *NGEN, NSET=fl_edge_blk1
 <nnum_flb_blk1>, <nnum_flt_blk1>, <nnum_brb_blk1>
+** 
+** Generate nodes on back left edge of block 1
 *NGEN, NSET=bl_edge_blk1
 <nnum_blb_blk1>, <nnum_blt_blk1>, <nnum_brb_blk1>
-*NFILL, NSET=l_face
+** 
+** Generate nodes on left face of block 1
+*NFILL, NSET=l_face_blk1
 fl_edge_blk1, bl_edge_blk1, <nel_depth>, <nel_widthp1>
-**
+** 
+** Generate nodes on front right edge of block 1
 *NGEN, NSET=fr_edge_blk1
 <nnum_frb_blk1>, <nnum_frt_blk1>, <nnum_brb_blk1>
+** 
+** Generate nodes on back right edge of block 1
 *NGEN, NSET=br_edge_blk1
 <nnum_brb_blk1>, <nnum_brt_blk1>, <nnum_brb_blk1>
-*NFILL, NSET=r_face
+** 
+** Generate nodes on right face of block 1
+*NFILL, NSET=r_face_blk1
 fr_edge_blk1, br_edge_blk1, <nel_depth>, <nel_widthp1>
-**
+** 
+** Generate nodes on interior of block 1
 *NFILL, NSET=NBLK1
-l_face, r_face, <nel_width>
+l_face_blk1, r_face_blk1, <nel_width>
 **
-** Generate Elements
+** Generate Elements on block 1
+**
 *Element, TYPE=C3D8H
-1, 
+1, <nnum_m1_blk1>, <nnum_m2_blk1>, <nnum_m3_blk1>, <nnum_m4_blk1>, <nnum_m5_blk1>, <nnum_m6_blk1>, <nnum_m7_blk1>, <nnum_m8_blk1>
+*Elgen, ELSET=EL_BLK1
+1, <nel_width>, 1, 1, <nel_depth>, <nel_widthp1>, <nel_width>, <nel_height_blk1>, <nnodes_layer>, <nel_layer>
+**
+** MESH for block 2
+**
+** Generate nodes on the corners of block 2
+*NODE
+<nnum_flb_blk2>, <blk2_x_flb>,  <blk2_y_flb>, <blk2_z_flb> 
+<nnum_flt_blk2>, <blk2_x_flb>,  <blk2_y_flb>, <blk2_z_brt>
+<nnum_blb_blk2>, <blk2_x_flb>,  <blk2_y_brt>, <blk2_z_flb>
+<nnum_blt_blk2>, <blk2_x_flb>,  <blk2_y_brt>, <blk2_z_brt>
+<nnum_frb_blk2>, <blk2_x_brt>,  <blk2_y_flb>, <blk2_z_flb> 
+<nnum_frt_blk2>, <blk2_x_brt>,  <blk2_y_flb>, <blk2_z_brt>
+<nnum_brb_blk2>, <blk2_x_brt>,  <blk2_y_brt>, <blk2_z_flb>
+<nnum_brt_blk2>, <blk2_x_brt>,  <blk2_y_brt>, <blk2_z_brt>
+** 
+** Generate nodes on front left edge of block 2
+*NGEN, NSET=fl_edge_blk2
+<nnum_flb_blk2>, <nnum_flt_blk2>, <nnodes_layer>
+** 
+** Generate nodes on back left edge of block 2
+*NGEN, NSET=bl_edge_blk2
+<nnum_blb_blk2>, <nnum_blt_blk2>, <nnodes_layer>
+** 
+** Generate nodes on left face of block 2
+*NFILL, NSET=l_face_blk2
+fl_edge_blk2, bl_edge_blk2, <nel_depth>, <nel_widthp1>
+** 
+** Generate nodes on front right edge of block 2
+*NGEN, NSET=fr_edge_blk2
+<nnum_frb_blk2>, <nnum_frt_blk2>, <nnodes_layer>
+** 
+** Generate nodes on back right edge of block 2
+*NGEN, NSET=br_edge_blk2
+<nnum_brb_blk2>, <nnum_brt_blk2>, <nnodes_layer>
+** 
+** Generate nodes on right face of block 2
+*NFILL, NSET=r_face_blk2
+fr_edge_blk2, br_edge_blk2, <nel_depth>, <nel_widthp1>
+** 
+** Generate nodes on interior of block 2
+*NFILL, NSET=NBLK2
+l_face_blk2, r_face_blk2, <nel_width>
+**
+** Generate Elements on block 2
+**
+*Element, TYPE=C3D8H
+<elnum_blk2_start>, <nnum_m1_blk2>, <nnum_m2_blk2>, <nnum_m3_blk2>, <nnum_m4_blk2>, <nnum_m5_blk2>, <nnum_m6_blk2>, <nnum_m7_blk2>, <nnum_m8_blk2>
+*Elgen, ELSET=EL_BLK2
+<elnum_blk2_start>, <nel_width>, 1, 1, <nel_depth>, <nel_widthp1>, <nel_width>, <nel_height_blk2>, <nnodes_layer>, <nel_layer>
+**
+** Define Materials
+**
+*SOLID SECTION, ELSET=EL_BLK1, MATERIAL=NEOHOOK1
+*MATERIAL, NAME=NEOHOOK1
+*HYPERELASTIC, NEO HOOKE
+<C10_blk1>, <D1_blk1>, 1
+**
+*SOLID SECTION, ELSET=EL_BLK2, MATERIAL=NEOHOOK2
+*MATERIAL, NAME=NEOHOOK2
+*HYPERELASTIC, NEO HOOKE
+<C10_blk2>, <D1_blk2>, 1
+**
+** GENERATE SURFACES TO TIE TOGETHER
+**
+** extract bottom face of block 1
+*NSET, NSET=b_face_blk1, GENERATE
+<nnum_flb_blk1>, <nnum_brb_blk1>, 1
+** extract top face of block 1
+*NSET, NSET=t_face_blk1, GENERATE
+<nnum_flt_blk1>, <nnum_brt_blk1>, 1
+** extract bottom face of block 2
+*NSET, NSET=b_face_blk2, GENERATE
+<nnum_flb_blk2>, <nnum_brb_blk2>, 1
+**
+*ELSET, ELSET=t_layer_blk2, GENERATE
+<elnum_t_layer_flt_blk2>, <elnum_t_layer_brt_blk2>, 1
+**
+*SURFACE, NAME = t_surf_blk1,TYPE = NODE
+t_face_blk1, 1.0
+*SURFACE, NAME = b_surf_blk2,TYPE = NODE
+b_face_blk2, 1.0
+**
+** tie both blocks together (for now)
+**
+*TIE, NAME=TIE_BLK12
+t_surf_blk1, b_surf_blk2
+**
+*AMPLITUDE, NAME = DLOAD_t_face_blk2, DEFINITION=TABULAR
+1, 100, 2, 500, 3, 1000
+**
+**
+** History data
+**
+*STEP, NLGEOM=YES
+*STATIC
+**
+** BCs
+**
+*BOUNDARY
+b_face_blk1, PINNED
+**
+** Loading
+** so far, uniformly distributed load
+*DLOAD, AMPLITUDE = DLOAD_t_face_blk2
+t_layer_blk2, TRVEC2, 1, 0 , 0, 1
+*NODE PRINT
+U, 
+RF,
+*EL PRINT
+S,
+*END STEP
+**
+** END
